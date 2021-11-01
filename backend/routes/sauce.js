@@ -6,12 +6,12 @@ const sauceCtrl = require('../controllers/sauce');
 
 
 // ROUTES ----------
-router.post('/', sauceCtrl.createSauce);
-router.post('/:id/like', sauceCtrl.rateSauce);
-router.put('/:id', sauceCtrl.modifySauce);
-router.delete('/:id', sauceCtrl.deleteSauce);
-router.get('/', sauceCtrl.getAllSauces);
-router.get('/:id', sauceCtrl.getOneSauce);
+router.post('/', auth, sauceCtrl.createSauce);
+router.post('/:id/like',auth,  sauceCtrl.rateSauce);
+router.put('/:id', auth, sauceCtrl.modifySauce);
+router.delete('/:id', auth, sauceCtrl.deleteSauce);
+router.get('/', auth, sauceCtrl.getAllSauces);
+router.get('/:id', auth, sauceCtrl.getOneSauce);
 
 
 // EXPORTATION ----------
