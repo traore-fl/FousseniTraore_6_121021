@@ -1,29 +1,49 @@
-const express = require('express');
-const mongoose = require('mongoose');
+// IMPORTATIONS ----------
+const express = require('express'); // Framework pour le développement du serveur
+const mongoose = require('mongoose'); // Bibliothèque ODM pour la création des schémas
+const helmet = require('helmet'); // Package pour la sécurisation des headers HTTP
+const path = require('path'); // Module NodeJS pour la gestion des chemins d'accès à des fichiers
+const morgan = require('morgan'); // Journaux de données des requêtes HTTP
+const fs = require('fs'); // File System : gestionnaire de fichiers
+require('dotenv').config(); // Module pour le chargement de variables depuis le fichier .env
+
+// Routes
+const sauceRoutes = require('./routes/sauce');
+const userRoutes = require('./routes/user');
+
+
+// CONNEXION A LA BASE DE DONNEES ----------
+mongoose.connect(`${process.env.DATABASE}`, 
+    {useNewUrlParser: true,
+    useUnifiedTopology: true,}
+)
+.then(() => console.log('Connected to MongoDB !'))
+.catch(() => console.log('Connection to MongoDB failed !'));
+
+// CREATION DE L'APPLICATION EXPRESS ----------
 const app = express();
-mongoose.connect('mongodb+srv://traoreFousseni:F6L12a1N14y25@cluster0.xzuyo.mongodb.net/test?retryWrites=true&w=majority',
-  { useNewUrlParser: true,
-    useUnifiedTopology: true })
-  .then(() => console.log('Connexion à MongoDB réussie !'))
-  .catch(() => console.log('Connexion à MongoDB échouée !'));
 
+// Activation de la protection Helmet
+app.use(helmet());
+
+// Gestion du CORS
 app.use((req, res, next) => {
-  console.log('Requête reçue !');
-  next();
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    next();
 });
 
-app.use((req, res, next) => {
-  res.status(201);
-  next();
-});
+// Configuration de morgan
+var accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
 
-app.use((req, res, next) => {
-  res.json({ message: 'Votre requête a bien été reçue !' });
-  next();
-});
+// Intégrations des routes
+app.use(express.json());
+app.use(morgan(':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', { stream: accessLogStream }));
+app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/api/sauces', sauceRoutes);
+app.use('/api/auth', userRoutes);
 
-app.use((req, res, next) => {
-  console.log('Réponse envoyée avec succès !');
-});
 
+// EXPORTATION ----------
 module.exports = app;
